@@ -143,10 +143,31 @@ uvicorn app.main:app --reload --port 8000
 
 完整 API 文档请访问: `http://localhost:8000/docs`
 
+## ⚙️ 文档入库流程
+
+```
+上传文件 → 保存到磁盘 → 创建 Task(PENDING)
+                              ↓
+              Worker 拾取任务 → Task: PROCESSING
+                              ↓
+              解析文本(PDF/TXT/DOCX) → Document: PARSING
+                              ↓
+              滑动窗口切块 → Document: CHUNKING
+                              ↓
+              调用 Embedding API → Document: EMBEDDING
+                              ↓
+              写入 pgvector → Document: READY, Task: SUCCESS
+```
+
+- **解析器**: PDF(pymupdf) / TXT(原生) / DOCX(python-docx)，统一返回带页码的文本
+- **切块器**: 滑动窗口策略，优先在段落/句子边界断开，保留 chunk↔原文位置映射
+- **Embedding**: OpenAI 兼容接口，自动分批（64条/批），可配置模型和 URL
+- **Worker**: asyncio 后台任务，每 3 秒轮询一次，随 FastAPI 进程启停
+
 ## 📋 开发阶段
 
 - [x] **阶段 1**: 系统骨架 — 项目结构、数据库建模、基础 API、Docker 配置
-- [ ] **阶段 2**: 文档入库链路 — 文件解析、切块、向量化、任务流转
+- [x] **阶段 2**: 文档入库链路 — 文件解析、切块、向量化、任务流转
 - [ ] **阶段 3**: 检索问答 — 相似度检索、Prompt 构建、LLM 回答、引用返回
 - [ ] **阶段 4**: 完善表现 — 版本管理优化、错误处理、架构图、演示准备
 

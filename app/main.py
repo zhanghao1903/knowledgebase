@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,6 +8,12 @@ from sqlalchemy import text
 from app.config import settings
 from app.database import engine
 from app.routers import knowledge_base, document, task
+from app.worker import worker_loop
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)-7s [%(name)s] %(message)s",
+)
 
 
 @asynccontextmanager
@@ -13,7 +21,18 @@ async def lifespan(app: FastAPI):
     # Enable pgvector extension on startup
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
+
+    # Start background worker
+    worker_task = asyncio.create_task(worker_loop())
+
     yield
+
+    # Graceful shutdown
+    worker_task.cancel()
+    try:
+        await worker_task
+    except asyncio.CancelledError:
+        pass
     await engine.dispose()
 
 
