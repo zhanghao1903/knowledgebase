@@ -57,10 +57,19 @@ All business APIs under `/api/v1/`. Health check at `/health`.
   - Status flow: PENDING → PARSING → CHUNKING → EMBEDDING → READY (or FAILED)
 - `app/worker.py` — Background asyncio task polling pending jobs every 3s
 
+## Phase 3 Modules
+- `app/services/retrieval.py` — pgvector cosine distance search scoped to KB
+  - Embeds query → cosine_distance search → returns RetrievedChunk with score
+- `app/services/llm.py` — OpenAI-compatible chat completion client
+- `app/services/qa.py` — Full RAG orchestrator: retrieve → build prompt → LLM → citations
+  - System prompt enforces answer-from-context with citation numbers
+- `app/schemas/qa.py` — QueryRequest, QueryResponse, Citation
+- `app/routers/qa.py` — POST /api/v1/knowledge-bases/{kb_id}/query
+
 ## Development Phases
 - Phase 1: ✅ Skeleton (models, APIs, Docker)
 - Phase 2: ✅ Document ingest pipeline (parse, chunk, embed, worker)
-- Phase 3: TODO — Query embedding, retrieval, LLM Q&A
+- Phase 3: ✅ Retrieval & RAG Q&A (vector search, prompt, LLM, citations)
 - Phase 4: TODO — Polish, docs, demo preparation
 
 ## Key Design Decisions

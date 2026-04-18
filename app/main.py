@@ -7,7 +7,7 @@ from sqlalchemy import text
 
 from app.config import settings
 from app.database import engine
-from app.routers import knowledge_base, document, task
+from app.routers import knowledge_base, document, task, qa
 from app.worker import worker_loop
 
 logging.basicConfig(
@@ -46,6 +46,7 @@ app = FastAPI(
 app.include_router(knowledge_base.router, prefix="/api/v1")
 app.include_router(document.router, prefix="/api/v1")
 app.include_router(task.router, prefix="/api/v1")
+app.include_router(qa.router, prefix="/api/v1")
 
 
 @app.get("/health", tags=["Health"])
