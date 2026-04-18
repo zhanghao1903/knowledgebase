@@ -29,9 +29,13 @@ class Task(Base):
     document_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("kb_document.id", ondelete="CASCADE"), nullable=False
     )
-    task_type: Mapped[TaskType] = mapped_column(Enum(TaskType), nullable=False)
+    task_type: Mapped[TaskType] = mapped_column(
+        Enum(TaskType, values_callable=lambda t: [e.value for e in t]),
+        nullable=False,
+    )
     status: Mapped[TaskStatus] = mapped_column(
-        Enum(TaskStatus), default=TaskStatus.PENDING
+        Enum(TaskStatus, values_callable=lambda t: [e.value for e in t]),
+        default=TaskStatus.PENDING,
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

@@ -34,11 +34,15 @@ class Document(Base):
         UUID(as_uuid=True), ForeignKey("knowledge_base.id", ondelete="CASCADE"), nullable=False
     )
     filename: Mapped[str] = mapped_column(String(512), nullable=False)
-    file_type: Mapped[FileType] = mapped_column(Enum(FileType), nullable=False)
+    file_type: Mapped[FileType] = mapped_column(
+        Enum(FileType, values_callable=lambda t: [e.value for e in t]),
+        nullable=False,
+    )
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     file_path: Mapped[str] = mapped_column(String(1024), nullable=False)
     status: Mapped[DocumentStatus] = mapped_column(
-        Enum(DocumentStatus), default=DocumentStatus.PENDING
+        Enum(DocumentStatus, values_callable=lambda t: [e.value for e in t]),
+        default=DocumentStatus.PENDING,
     )
     current_version: Mapped[int] = mapped_column(Integer, default=1)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)
