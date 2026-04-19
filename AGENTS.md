@@ -82,12 +82,23 @@ All business APIs under `/api/v1/`. Health check at `/health`.
 - docker-compose.yml — All env vars (OpenRouter, Embedding) with defaults
 - README: Mermaid architecture diagram, ER diagram, env var table, demo walkthrough
 
+## Phase 6: Frontend
+- Vue 3 + Vite SPA in `frontend/`
+- 3 pages: HomeView (KB list), KBDetailView (docs + chat), TasksView
+- API client: `frontend/src/api/client.js` (fetch wrapper with error handling)
+- Components: ChatPanel, DocUpload (drag & drop), StatusBadge
+- Nginx reverse proxy: `/api/*` → backend, SPA fallback for Vue Router
+- Docker: multi-stage build (node:20-alpine → nginx:alpine)
+- CORS middleware added to FastAPI `app/main.py`
+- docker-compose.yml: `frontend` service on port 3000
+
 ## Development Phases
 - Phase 1: ✅ Skeleton (models, APIs, Docker)
 - Phase 2: ✅ Document ingest pipeline (parse, chunk, embed, worker)
 - Phase 3: ✅ Retrieval & RAG Q&A (vector search, prompt, LLM, citations)
 - Phase 4: ✅ Testing (75 tests: unit + API, with auto JSON logs)
 - Phase 5: ✅ Engineering polish (error handling, version mgmt, architecture docs)
+- Phase 6: ✅ Frontend (Vue 3 SPA: KB management, doc upload, Q&A chat, task monitor)
 
 ## Key Design Decisions
 - pgvector over standalone vector DB: simplicity, single Postgres handles both relational + vector

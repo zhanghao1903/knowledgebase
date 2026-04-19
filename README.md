@@ -22,7 +22,8 @@
 
 ```mermaid
 graph TB
-    User([用户]) --> API[FastAPI API Server]
+    User([用户]) --> FE[前端 Vue 3 SPA<br/>Nginx]
+    FE -->|/api/*| API[FastAPI API Server]
 
     subgraph "API 层"
         API --> KB[知识库管理]
@@ -59,6 +60,8 @@ graph TB
 
 | 组件 | 技术 | 选型理由 |
 |------|------|----------|
+| **前端** | Vue 3 + Vite | 轻量、响应式、Composition API、开发体验好 |
+| **前端部署** | Nginx | 静态文件服务 + API 反向代理 |
 | 后端框架 | FastAPI | 异步高性能、自动 Swagger 文档、类型安全 |
 | 数据库 | PostgreSQL + pgvector | 单库同时处理关系型查询和向量检索，降低运维复杂度 |
 | ORM | SQLAlchemy 2.0 (async) | 异步操作、声明式模型、成熟生态 |
@@ -66,7 +69,7 @@ graph TB
 | LLM 服务 | OpenRouter | 聚合多模型，OpenAI 兼容接口，一个 key 访问多种模型 |
 | Embedding | OpenAI 兼容 API | 可替换为本地模型 |
 | 异步任务 | DB 轮询 Worker | 轻量级，无需 Celery/MQ 依赖 |
-| 容器化 | Docker Compose | 一键启动所有服务 |
+| 容器化 | Docker Compose | 一键启动所有服务（前端 + 后端 + DB） |
 
 ### 为什么选 Postgres + pgvector 而不是独立向量库？
 
@@ -81,36 +84,43 @@ graph TB
 
 ```
 knowledgebase/
-├── app/
-│   ├── main.py              # 应用入口、生命周期、健康检查
-│   ├── config.py             # 配置（DB / OpenRouter / Embedding）
-│   ├── database.py           # 数据库连接
-│   ├── worker.py             # 后台 Worker（异步轮询）
-│   ├── models/               # SQLAlchemy 数据模型
-│   │   ├── knowledge_base.py
-│   │   ├── document.py       # 文档 + 版本
-│   │   ├── chunk.py          # 切块（含向量字段）
-│   │   └── task.py
-│   ├── schemas/              # Pydantic 请求/响应
-│   ├── routers/              # API 路由
-│   ├── services/             # 业务逻辑
-│   │   ├── parser.py         # 文档解析
-│   │   ├── chunker.py        # 文本切块
-│   │   ├── embedding.py      # Embedding 客户端
-│   │   ├── ingest.py         # 入库管线
-│   │   ├── retrieval.py      # 向量检索
-│   │   ├── llm.py            # LLM 客户端（OpenRouter）
-│   │   └── qa.py             # RAG 问答编排
-│   └── core/
-│       ├── exceptions.py     # 业务异常
-│       └── error_handler.py  # 全局异常处理
-├── tests/                    # 75 个测试（unit + API）
-│   ├── unit/                 # 单元测试
-│   ├── api/                  # API 端点测试
-│   └── logs/                 # 测试日志（JSON）
-├── alembic/                  # 数据库迁移
-├── docker-compose.yml
-├── Dockerfile
+├── frontend/                  # 🖥️ Vue 3 前端
+│   ├── src/
+│   │   ├── main.js            # 应用入口
+│   │   ├── App.vue            # 根组件（导航 + Toast）
+│   │   ├── router/            # Vue Router
+│   │   ├── api/               # API 客户端层
+│   │   │   ├── client.js      # fetch 封装（GET/POST/PATCH/DELETE/Upload）
+│   │   │   ├── knowledgeBase.js
+│   │   │   ├── document.js
+│   │   │   ├── task.js
+│   │   │   └── qa.js
+│   │   ├── views/             # 页面组件
+│   │   │   ├── HomeView.vue   # 知识库列表
+│   │   │   ├── KBDetailView.vue # 文档管理 + 问答
+│   │   │   └── TasksView.vue  # 任务监控
+│   │   ├── components/        # 可复用组件
+│   │   │   ├── ChatPanel.vue  # 聊天对话
+│   │   │   ├── DocUpload.vue  # 拖拽上传
+│   │   │   └── StatusBadge.vue
+│   │   └── styles/main.css
+│   ├── nginx.conf             # Nginx 配置（SPA + API 代理）
+│   ├── Dockerfile             # 多阶段构建
+│   └── package.json
+├── app/                       # 🐍 FastAPI 后端
+│   ├── main.py                # 应用入口、CORS、健康检查
+│   ├── config.py              # 配置管理
+│   ├── database.py            # 数据库连接
+│   ├── worker.py              # 后台 Worker
+│   ├── models/                # SQLAlchemy 模型
+│   ├── schemas/               # Pydantic 模型
+│   ├── routers/               # API 路由
+│   ├── services/              # 业务逻辑（解析/切块/向量化/检索/问答）
+│   └── core/                  # 异常处理
+├── tests/                     # 75 个测试
+├── alembic/                   # 数据库迁移
+├── docker-compose.yml         # 一键启动：DB + API + 前端
+├── Dockerfile                 # 后端镜像
 └── requirements.txt
 ```
 
@@ -193,14 +203,15 @@ erDiagram
 git clone https://github.com/zhanghao1903/knowledgebase.git
 cd knowledgebase
 
-# 配置 API Key（写入 .env 文件，Docker Compose 会自动读取）
+# 配置 API Key
 cp .env.example .env
 # 编辑 .env，填入 OPENROUTER_API_KEY 和 EMBEDDING_API_KEY
 
-# 一键启动
+# 一键启动（前端 + 后端 + 数据库）
 docker compose up --build
 
 # 访问
+# 前端界面:  http://localhost:3000
 # API 文档:  http://localhost:8000/docs
 # 健康检查:  http://localhost:8000/health
 ```
@@ -208,10 +219,16 @@ docker compose up --build
 ### 本地开发
 
 ```bash
+# 后端
 pip install -r requirements.txt
 cp .env.example .env    # 编辑配置
 alembic upgrade head    # 数据库迁移
 uvicorn app.main:app --reload --port 8000
+
+# 前端（另开终端）
+cd frontend
+npm install
+npm run dev             # http://localhost:3000（自动代理 API 到 8000）
 ```
 
 ---
@@ -403,6 +420,27 @@ pytest -v           # 详细输出
 
 ---
 
+## 🖥️ 前端界面
+
+3 个核心页面，覆盖完整用户流程：
+
+| 页面 | 路由 | 功能 |
+|------|------|------|
+| **知识库首页** | `/` | 知识库卡片列表、创建/删除知识库 |
+| **知识库详情** | `/kb/:id` | 左侧：文档列表 + 上传 + 重传；右侧：问答聊天 |
+| **任务监控** | `/tasks` | 任务表格、状态筛选、自动刷新 |
+
+### 前端设计要点
+
+- **组件化**: API 客户端层 → 页面组件 → 可复用 UI 组件
+- **拖拽上传**: 支持点击和拖拽两种方式上传文档
+- **实时状态**: 文档处理状态自动展示，任务页 5 秒自动刷新
+- **聊天式问答**: 对话界面，答案附带引用来源（文件名、页码、相似度）
+- **统一错误处理**: API 错误自动 Toast 提示
+- **API 代理**: 开发环境 Vite 代理 / 生产环境 Nginx 反向代理，前后端完全解耦
+
+---
+
 ## 📋 开发阶段
 
 - [x] **阶段 1**: 系统骨架 — 项目结构、数据库建模、基础 API、Docker 配置
@@ -410,6 +448,7 @@ pytest -v           # 详细输出
 - [x] **阶段 3**: 检索问答 — 相似度检索、Prompt 构建、LLM 回答、引用返回
 - [x] **阶段 4**: 测试体系 — 75 个测试、测试日志
 - [x] **阶段 5**: 工程完善 — 版本管理、全局错误处理、架构图、环境变量文档
+- [x] **阶段 6**: 前端界面 — Vue 3 SPA、知识库管理、文档上传、问答聊天、任务监控
 
 ## 🔮 后续规划
 
