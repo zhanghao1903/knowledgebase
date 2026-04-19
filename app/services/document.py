@@ -83,6 +83,59 @@ async def upload_document(
     return doc, task
 
 
+async def reupload_document(
+    db: AsyncSession, doc_id: uuid.UUID, file: UploadFile
+) -> tuple[Document, Task]:
+    """Re-upload a document, creating a new version and re-triggering ingest."""
+    doc = await get_document(db, doc_id)
+
+    new_file_type = _get_file_type(file.filename or "unknown")
+
+    # Increment version
+    new_version = doc.current_version + 1
+
+    # Save file
+    storage_dir = Path(settings.STORAGE_DIR) / str(doc.knowledge_base_id) / str(doc.id)
+    storage_dir.mkdir(parents=True, exist_ok=True)
+    file_path = storage_dir / f"v{new_version}_{file.filename}"
+
+    content = await file.read()
+    file_size = len(content)
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    # Update document record
+    doc.filename = file.filename
+    doc.file_type = new_file_type
+    doc.file_size = file_size
+    doc.file_path = str(file_path)
+    doc.current_version = new_version
+    doc.status = DocumentStatus.PENDING
+    doc.error_message = None
+
+    # Create version record
+    version = DocumentVersion(
+        document_id=doc.id,
+        version_number=new_version,
+        file_path=str(file_path),
+        file_size=file_size,
+    )
+    db.add(version)
+
+    # Create new ingest task
+    task = Task(
+        document_id=doc.id,
+        task_type=TaskType.DOCUMENT_INGEST,
+        status=TaskStatus.PENDING,
+    )
+    db.add(task)
+
+    await db.flush()
+    await db.refresh(doc)
+    await db.refresh(task)
+    return doc, task
+
+
 async def get_document(db: AsyncSession, doc_id: uuid.UUID) -> Document:
     result = await db.execute(select(Document).where(Document.id == doc_id))
     doc = result.scalar_one_or_none()

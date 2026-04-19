@@ -75,12 +75,19 @@ All business APIs under `/api/v1/`. Health check at `/health`.
 - `pytest.ini` — markers: `unit`, `api`; asyncio_mode = auto
 - `requirements-test.txt` — pytest + pytest-asyncio
 
+## Phase 5: Engineering polish
+- `app/core/error_handler.py` — Global exception handlers (404/422/500 uniform JSON)
+- `app/main.py` — Enhanced health check (DB ping), startup config validation
+- Document re-upload: PUT /documents/{id}/reupload → new version + re-ingest
+- docker-compose.yml — All env vars (OpenRouter, Embedding) with defaults
+- README: Mermaid architecture diagram, ER diagram, env var table, demo walkthrough
+
 ## Development Phases
 - Phase 1: ✅ Skeleton (models, APIs, Docker)
 - Phase 2: ✅ Document ingest pipeline (parse, chunk, embed, worker)
 - Phase 3: ✅ Retrieval & RAG Q&A (vector search, prompt, LLM, citations)
-- Phase 4: ✅ Testing (69 tests: unit + API, with auto JSON logs)
-- Phase 5: TODO — Polish, docs, demo preparation
+- Phase 4: ✅ Testing (75 tests: unit + API, with auto JSON logs)
+- Phase 5: ✅ Engineering polish (error handling, version mgmt, architecture docs)
 
 ## Key Design Decisions
 - pgvector over standalone vector DB: simplicity, single Postgres handles both relational + vector

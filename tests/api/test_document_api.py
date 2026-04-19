@@ -82,6 +82,31 @@ class TestGetDocumentVersions:
         assert resp.json()[0]["version_number"] == 1
 
 
+class TestReuploadDocument:
+    def test_success(self, client):
+        doc = make_document(filename="updated.pdf")
+        task = make_task(document_id=doc.id)
+        with patch("app.services.document.reupload_document", new_callable=AsyncMock, return_value=(doc, task)):
+            resp = client.put(
+                f"/api/v1/documents/{doc.id}/reupload",
+                files={"file": ("updated.pdf", io.BytesIO(b"new content"), "application/pdf")},
+            )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "task_id" in data
+        assert data["document"]["filename"] == "updated.pdf"
+
+    def test_not_found(self, client):
+        from app.core.exceptions import NotFoundError
+        doc_id = uuid.uuid4()
+        with patch("app.services.document.reupload_document", new_callable=AsyncMock, side_effect=NotFoundError("Document", doc_id)):
+            resp = client.put(
+                f"/api/v1/documents/{doc_id}/reupload",
+                files={"file": ("test.pdf", io.BytesIO(b"data"), "application/pdf")},
+            )
+        assert resp.status_code == 404
+
+
 class TestDeleteDocument:
     def test_success(self, client):
         doc_id = uuid.uuid4()

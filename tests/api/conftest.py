@@ -20,6 +20,7 @@ from app.models.task import Task, TaskStatus, TaskType
 
 def _create_test_app() -> FastAPI:
     """Build a FastAPI app identical to production but with a no-op lifespan."""
+    from app.core.error_handler import register_error_handlers
     from app.routers import knowledge_base, document, task, qa
 
     @asynccontextmanager
@@ -31,6 +32,7 @@ def _create_test_app() -> FastAPI:
         version=settings.VERSION,
         lifespan=_noop_lifespan,
     )
+    register_error_handlers(test_app)
     test_app.include_router(knowledge_base.router, prefix="/api/v1")
     test_app.include_router(document.router, prefix="/api/v1")
     test_app.include_router(task.router, prefix="/api/v1")

@@ -66,6 +66,25 @@ async def get_document_versions(
     return await doc_service.get_document_versions(db, doc_id)
 
 
+@router.put(
+    "/documents/{doc_id}/reupload",
+    response_model=DocumentUploadResponse,
+    status_code=200,
+)
+async def reupload_document(
+    doc_id: uuid.UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """重新上传文档（创建新版本并重新入库）"""
+    doc, task = await doc_service.reupload_document(db, doc_id, file)
+    return DocumentUploadResponse(
+        document=doc,
+        task_id=task.id,
+        message="Document re-uploaded, new version processing started",
+    )
+
+
 @router.delete("/documents/{doc_id}", status_code=204)
 async def delete_document(
     doc_id: uuid.UUID,
