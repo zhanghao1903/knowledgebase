@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import String, Text, DateTime, Enum, ForeignKey, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -47,3 +47,5 @@ class Task(Base):
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+    document = relationship("Document", back_populates="tasks")

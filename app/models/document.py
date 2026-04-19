@@ -57,6 +57,7 @@ class Document(Base):
     knowledge_base = relationship("KnowledgeBase", back_populates="documents")
     versions = relationship("DocumentVersion", back_populates="document", cascade="all, delete-orphan")
     chunks = relationship("Chunk", back_populates="document", cascade="all, delete-orphan")
+    tasks = relationship("Task", back_populates="document", cascade="all, delete-orphan")
 
 
 class DocumentVersion(Base):

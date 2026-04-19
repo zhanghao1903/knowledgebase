@@ -66,18 +66,19 @@ async def upload_document(
     )
     db.add(version)
 
-    # Create ingest task
+    # Flush document + version first so the FK target exists
+    kb.document_count = kb.document_count + 1
+    await db.flush()
+
+    # Create ingest task (depends on document via FK)
     task = Task(
-        document_id=doc_id,
+        document_id=doc.id,
         task_type=TaskType.DOCUMENT_INGEST,
         status=TaskStatus.PENDING,
     )
     db.add(task)
-
-    # Update knowledge base document count
-    kb.document_count = kb.document_count + 1
-
     await db.flush()
+
     await db.refresh(doc)
     await db.refresh(task)
     return doc, task
@@ -122,15 +123,18 @@ async def reupload_document(
     )
     db.add(version)
 
-    # Create new ingest task
+    # Flush document update + version first
+    await db.flush()
+
+    # Create new ingest task (depends on document via FK)
     task = Task(
         document_id=doc.id,
         task_type=TaskType.DOCUMENT_INGEST,
         status=TaskStatus.PENDING,
     )
     db.add(task)
-
     await db.flush()
+
     await db.refresh(doc)
     await db.refresh(task)
     return doc, task
