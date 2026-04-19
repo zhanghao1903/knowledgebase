@@ -9,16 +9,16 @@ class Settings(BaseSettings):
 
     STORAGE_DIR: str = "./storage"
 
-    # Embedding config
-    EMBEDDING_API_URL: str = "http://localhost:8080/v1/embeddings"
+    # --- OpenRouter (LLM) ---
+    OPENROUTER_API_KEY: str = "sk-placeholder"
+    LLM_API_URL: str = "https://openrouter.ai/api/v1/chat/completions"
+    LLM_MODEL: str = "openai/gpt-4o-mini"
+
+    # --- Embedding (separate provider — OpenRouter does not serve embeddings) ---
+    EMBEDDING_API_KEY: str = ""  # falls back to OPENROUTER_API_KEY if empty
+    EMBEDDING_API_URL: str = "https://api.openai.com/v1/embeddings"
     EMBEDDING_MODEL: str = "text-embedding-ada-002"
     EMBEDDING_DIMENSION: int = 1536
-
-    # LLM config
-    LLM_API_URL: str = "http://localhost:8080/v1/chat/completions"
-    LLM_MODEL: str = "gpt-3.5-turbo"
-
-    OPENAI_API_KEY: str = "sk-placeholder"
 
     # Chunk config
     CHUNK_SIZE: int = 500
@@ -26,6 +26,11 @@ class Settings(BaseSettings):
 
     # Retrieval config
     RETRIEVAL_TOP_K: int = 5
+
+    @property
+    def effective_embedding_api_key(self) -> str:
+        """Use dedicated embedding key if set, otherwise fall back to OpenRouter key."""
+        return self.EMBEDDING_API_KEY or self.OPENROUTER_API_KEY
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

@@ -1,7 +1,9 @@
 """Embedding client — wraps an OpenAI-compatible embedding API.
 
 Provides batch embedding with automatic chunking to respect API limits.
-Designed to be swappable: just change the URL/model in config.
+Note: OpenRouter does not serve embeddings, so this typically points to
+a separate provider (OpenAI, local model, etc.) configured via
+EMBEDDING_API_URL and EMBEDDING_API_KEY.
 """
 from __future__ import annotations
 
@@ -43,7 +45,7 @@ async def _call_embedding_api(texts: list[str]) -> list[list[float]]:
     }
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+        "Authorization": f"Bearer {settings.effective_embedding_api_key}",
     }
 
     async with httpx.AsyncClient(timeout=60.0) as client:

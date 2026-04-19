@@ -1,7 +1,7 @@
-"""LLM client — wraps an OpenAI-compatible chat completion API.
+"""LLM client — wraps an OpenRouter (OpenAI-compatible) chat completion API.
 
 Provides a simple interface for generating answers from a prompt.
-Designed to be swappable: change the URL/model in config.
+Uses OpenRouter by default; change LLM_API_URL/LLM_MODEL in config to switch.
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ async def chat_completion(
     }
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {settings.OPENAI_API_KEY}",
+        "Authorization": f"Bearer {settings.OPENROUTER_API_KEY}",
     }
 
     async with httpx.AsyncClient(timeout=120.0) as client:
