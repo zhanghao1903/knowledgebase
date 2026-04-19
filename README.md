@@ -53,12 +53,19 @@ knowledgebase/
 │   │   ├── llm.py            # LLM 客户端
 │   │   └── qa.py             # RAG 问答编排
 │   └── core/                 # 异常、工具
+├── tests/                    # 测试套件
+│   ├── conftest.py           # 测试日志插件 + 共享 fixture
+│   ├── unit/                 # 单元测试（parser/chunker/prompt/schema）
+│   ├── api/                  # API 端点测试（mock 服务层）
+│   └── logs/                 # 测试日志（JSON，自动生成）
 ├── alembic/                  # 数据库迁移
 ├── scripts/                  # 工具脚本
 ├── storage/                  # 文件存储目录
 ├── docker-compose.yml
 ├── Dockerfile
 ├── requirements.txt
+├── requirements-test.txt
+├── pytest.ini
 └── README.md
 ```
 
@@ -190,12 +197,63 @@ uvicorn app.main:app --reload --port 8000
 - **LLM**: OpenAI 兼容 Chat Completion 接口，可配置模型和 URL
 - **引用**: 每条引用包含 chunk 内容、来源文件名、页码和相似度分数
 
+## 🧪 测试
+
+```bash
+# 安装测试依赖
+pip install -r requirements-test.txt
+
+# 运行全部测试
+pytest
+
+# 按类别运行
+pytest -m unit      # 单元测试（无需 DB）
+pytest -m api       # API 端点测试（mock DB）
+
+# 详细输出
+pytest -v
+```
+
+### 测试结构
+
+```
+tests/
+├── conftest.py              # 测试日志插件 + 共享 fixture
+├── unit/                    # 单元测试（纯逻辑，无外部依赖）
+│   ├── test_parser.py       # PDF/TXT/DOCX 解析器（13 cases）
+│   ├── test_chunker.py      # 文本切块逻辑（16 cases）
+│   ├── test_qa_prompt.py    # RAG Prompt 构建（5 cases）
+│   └── test_schemas.py      # 请求/响应模型校验（10 cases）
+├── api/                     # API 端点测试（mock 服务层）
+│   ├── conftest.py          # TestClient + 模型工厂
+│   ├── test_knowledge_base_api.py  # 知识库 CRUD（10 cases）
+│   ├── test_document_api.py        # 文档管理（7 cases）
+│   ├── test_task_api.py            # 任务查询（5 cases）
+│   └── test_qa_api.py             # 问答接口（5 cases）
+└── logs/                    # 测试日志（自动生成 JSON，记录版本/时间/结果）
+```
+
+### 测试日志
+
+每次运行会在 `tests/logs/` 生成 JSON 日志：
+
+```json
+{
+  "version": "0.1.0",
+  "timestamp": "2026-04-19T06:25:09Z",
+  "duration_seconds": 1.0,
+  "total": 69, "passed": 69, "failed": 0,
+  "results": [{"name": "...", "status": "passed", "duration_seconds": 0.007}, ...]
+}
+```
+
 ## 📋 开发阶段
 
 - [x] **阶段 1**: 系统骨架 — 项目结构、数据库建模、基础 API、Docker 配置
 - [x] **阶段 2**: 文档入库链路 — 文件解析、切块、向量化、任务流转
 - [x] **阶段 3**: 检索问答 — 相似度检索、Prompt 构建、LLM 回答、引用返回
-- [ ] **阶段 4**: 完善表现 — 版本管理优化、错误处理、架构图、演示准备
+- [x] **阶段 4**: 测试体系 — 单元测试、API 测试、测试日志
+- [ ] **阶段 5**: 完善表现 — 版本管理优化、错误处理、架构图、演示准备
 
 ## 🔮 后续规划
 

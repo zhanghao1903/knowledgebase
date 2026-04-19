@@ -34,8 +34,8 @@ def chunk_document(
     so page_number mapping stays accurate. For single-page documents
     (TXT/DOCX), the full text is chunked as one stream.
     """
-    size = chunk_size or settings.CHUNK_SIZE
-    overlap = chunk_overlap or settings.CHUNK_OVERLAP
+    size = chunk_size if chunk_size is not None else settings.CHUNK_SIZE
+    overlap = chunk_overlap if chunk_overlap is not None else settings.CHUNK_OVERLAP
 
     if size <= 0:
         raise ValueError("chunk_size must be positive")

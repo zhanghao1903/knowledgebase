@@ -66,11 +66,21 @@ All business APIs under `/api/v1/`. Health check at `/health`.
 - `app/schemas/qa.py` — QueryRequest, QueryResponse, Citation
 - `app/routers/qa.py` — POST /api/v1/knowledge-bases/{kb_id}/query
 
+## Phase 4: Testing
+- `tests/conftest.py` — TestLogPlugin: auto-writes JSON report per run to `tests/logs/`
+- `tests/unit/` — 44 cases: parser (13), chunker (16), qa_prompt (5), schemas (10)
+- `tests/api/` — 25 cases: knowledge_base (10), document (7), task (5), qa (5)
+  - Uses `_create_test_app()` with noop lifespan (no DB needed)
+  - Model factories: `make_kb()`, `make_document()`, `make_task()`
+- `pytest.ini` — markers: `unit`, `api`; asyncio_mode = auto
+- `requirements-test.txt` — pytest + pytest-asyncio
+
 ## Development Phases
 - Phase 1: ✅ Skeleton (models, APIs, Docker)
 - Phase 2: ✅ Document ingest pipeline (parse, chunk, embed, worker)
 - Phase 3: ✅ Retrieval & RAG Q&A (vector search, prompt, LLM, citations)
-- Phase 4: TODO — Polish, docs, demo preparation
+- Phase 4: ✅ Testing (69 tests: unit + API, with auto JSON logs)
+- Phase 5: TODO — Polish, docs, demo preparation
 
 ## Key Design Decisions
 - pgvector over standalone vector DB: simplicity, single Postgres handles both relational + vector

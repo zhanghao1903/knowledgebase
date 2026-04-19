@@ -10,6 +10,8 @@ build/
 venv/
 storage/*
 !storage/.gitkeep
+tests/logs/*
+!tests/logs/.gitkeep
 .idea/
 .vscode/
 *.db
