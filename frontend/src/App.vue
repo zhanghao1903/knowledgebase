@@ -16,7 +16,7 @@ import { ref, provide } from 'vue'
 const toast = ref('')
 let timer = null
 
-function showToast(msg, duration = 3000) {
+function showToast(msg, duration = 3500) {
   toast.value = msg
   clearTimeout(timer)
   timer = setTimeout(() => (toast.value = ''), duration)

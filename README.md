@@ -211,7 +211,7 @@ cp .env.example .env
 docker compose up --build
 
 # 访问
-# 前端界面:  http://localhost:3000
+# 前端界面:  http://localhost:3500
 # API 文档:  http://localhost:8000/docs
 # 健康检查:  http://localhost:8000/health
 ```
@@ -228,7 +228,7 @@ uvicorn app.main:app --reload --port 8000
 # 前端（另开终端）
 cd frontend
 npm install
-npm run dev             # http://localhost:3000（自动代理 API 到 8000）
+npm run dev             # http://localhost:3500（自动代理 API 到 8000）
 ```
 
 ---

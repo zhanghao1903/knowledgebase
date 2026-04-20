@@ -90,7 +90,7 @@ All business APIs under `/api/v1/`. Health check at `/health`.
 - Nginx reverse proxy: `/api/*` → backend, SPA fallback for Vue Router
 - Docker: multi-stage build (node:20-alpine → nginx:alpine)
 - CORS middleware added to FastAPI `app/main.py`
-- docker-compose.yml: `frontend` service on port 3000
+- docker-compose.yml: `frontend` service on port 3500
 
 ## Development Phases
 - Phase 1: ✅ Skeleton (models, APIs, Docker)

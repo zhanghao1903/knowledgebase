@@ -42,6 +42,7 @@ async def _call_embedding_api(texts: list[str]) -> list[list[float]]:
     payload = {
         "input": texts,
         "model": settings.EMBEDDING_MODEL,
+        "dimensions": 1536,
     }
     headers = {
         "Content-Type": "application/json",
