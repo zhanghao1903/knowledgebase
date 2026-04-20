@@ -117,7 +117,7 @@ knowledgebase/
 │   ├── routers/               # API 路由
 │   ├── services/              # 业务逻辑（解析/切块/向量化/检索/问答）
 │   └── core/                  # 异常处理
-├── tests/                     # 75 个测试
+├── tests/                     # 99 个测试
 ├── alembic/                   # 数据库迁移
 ├── docker-compose.yml         # 一键启动：DB + API + 前端
 ├── Dockerfile                 # 后端镜像
@@ -365,8 +365,8 @@ curl -X PUT http://localhost:8000/api/v1/documents/{doc_id}/reupload \
 ```bash
 pip install -r requirements-test.txt
 
-pytest              # 全部 75 个测试
-pytest -m unit      # 单元测试（44 cases，无需 DB）
+pytest              # 全部 99 个测试
+pytest -m unit      # 单元测试（68 cases，无需 DB）
 pytest -m api       # API 端点测试（31 cases，mock 服务层）
 pytest -v           # 详细输出
 ```
@@ -379,6 +379,9 @@ pytest -v           # 详细输出
 | 切块器 | `test_chunker.py` | 16 | 滑动窗口、重叠、边界断句、多页、边界条件 |
 | Prompt | `test_qa_prompt.py` | 5 | 引用格式、空引用、页码空值、编号顺序 |
 | Schema | `test_schemas.py` | 10 | 字段校验、长度限制、范围约束 |
+| **LLM** | `test_llm.py` | 7 | 请求结构、认证头、温度参数、HTTP 错误、畸形响应 |
+| **Embedding** | `test_embedding.py` | 9 | 单文本/多文本、分批(64)、排序、边界、HTTP 错误 |
+| **QA 编排** | `test_qa_service.py` | 8 | RAG 全流程、引用格式、空检索、top_k 传递、prompt 内容 |
 | KB API | `test_knowledge_base_api.py` | 10 | CRUD、分页、验证 |
 | 文档 API | `test_document_api.py` | 9 | 上传、列表、版本、重新上传、删除 |
 | 任务 API | `test_task_api.py` | 5 | 详情、列表、状态筛选 |
@@ -394,7 +397,7 @@ pytest -v           # 详细输出
   "version": "0.1.0",
   "timestamp": "2026-04-19T...",
   "duration_seconds": 1.0,
-  "total": 75, "passed": 75, "failed": 0,
+  "total": 99, "passed": 99, "failed": 0,
   "results": [{"name": "...", "status": "passed", "duration_seconds": 0.007}, ...]
 }
 ```
@@ -446,7 +449,7 @@ pytest -v           # 详细输出
 - [x] **阶段 1**: 系统骨架 — 项目结构、数据库建模、基础 API、Docker 配置
 - [x] **阶段 2**: 文档入库链路 — 文件解析、切块、向量化、任务流转
 - [x] **阶段 3**: 检索问答 — 相似度检索、Prompt 构建、LLM 回答、引用返回
-- [x] **阶段 4**: 测试体系 — 75 个测试、测试日志
+- [x] **阶段 4**: 测试体系 — 99 个测试、测试日志
 - [x] **阶段 5**: 工程完善 — 版本管理、全局错误处理、架构图、环境变量文档
 - [x] **阶段 6**: 前端界面 — Vue 3 SPA、知识库管理、文档上传、问答聊天、任务监控
 
