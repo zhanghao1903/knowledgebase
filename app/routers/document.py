@@ -6,7 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.document import (
     DocumentList,
+    DocumentRecrawlResponse,
     DocumentResponse,
+    DocumentURLCreateRequest,
     DocumentUploadResponse,
     DocumentVersionResponse,
 )
@@ -64,6 +66,47 @@ async def get_document_versions(
 ):
     """获取文档的版本列表"""
     return await doc_service.get_document_versions(db, doc_id)
+
+
+@router.post(
+    "/knowledge-bases/{kb_id}/documents/url",
+    response_model=DocumentUploadResponse,
+    status_code=201,
+)
+async def upload_url_document(
+    kb_id: uuid.UUID,
+    payload: DocumentURLCreateRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """从 URL 抓取网页并加入知识库（单页，HTML 正文提取）"""
+    doc, task = await doc_service.upload_url_document(db, kb_id, payload.url)
+    return DocumentUploadResponse(document=doc, task_id=task.id)
+
+
+@router.post(
+    "/documents/{doc_id}/recrawl",
+    response_model=DocumentRecrawlResponse,
+    status_code=200,
+)
+async def recrawl_document(
+    doc_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """重新抓取 URL 文档；内容哈希变化才会生成新版本"""
+    doc, task, changed = await doc_service.recrawl_url_document(db, doc_id)
+    if changed:
+        return DocumentRecrawlResponse(
+            document=doc,
+            task_id=task.id if task else None,
+            changed=True,
+            message="URL content changed; new version ingest started",
+        )
+    return DocumentRecrawlResponse(
+        document=doc,
+        task_id=None,
+        changed=False,
+        message="URL content unchanged; no new version created",
+    )
 
 
 @router.put(

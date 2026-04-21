@@ -13,7 +13,13 @@ from fastapi.testclient import TestClient
 
 from app.config import settings
 from app.database import get_db
-from app.models.document import Document, DocumentStatus, DocumentVersion, FileType
+from app.models.document import (
+    Document,
+    DocumentStatus,
+    DocumentVersion,
+    FileType,
+    SourceType,
+)
 from app.models.knowledge_base import KnowledgeBase
 from app.models.task import Task, TaskStatus, TaskType
 
@@ -81,15 +87,21 @@ def make_document(
     kb_id: uuid.UUID | None = None,
     filename: str = "test.pdf",
     status: DocumentStatus = DocumentStatus.READY,
+    source_type: SourceType = SourceType.FILE,
+    source_url: str | None = None,
+    file_type: FileType = FileType.PDF,
 ) -> Document:
     now = datetime.now(timezone.utc)
     return Document(
         id=uuid.uuid4(),
         knowledge_base_id=kb_id or uuid.uuid4(),
         filename=filename,
-        file_type=FileType.PDF,
+        file_type=file_type,
         file_size=1024,
         file_path="/tmp/test.pdf",
+        source_type=source_type,
+        source_url=source_url,
+        content_hash=None,
         status=status,
         current_version=1,
         chunk_count=5,

@@ -59,10 +59,45 @@ def parse_docx(file_path: str | Path) -> ParsedDocument:
     return ParsedDocument(pages=[ParsedPage(page_number=1, text=full_text)])
 
 
+def parse_html(file_path: str | Path) -> ParsedDocument:
+    """Extract main article text from an HTML snapshot on disk.
+
+    Uses trafilatura (boilerplate-removal + readability heuristics). Falls
+    back to a BeautifulSoup body-text dump if trafilatura extracts nothing,
+    which sometimes happens on very short or unusually structured pages.
+    """
+    raw = Path(file_path).read_bytes()
+
+    import trafilatura
+
+    text = trafilatura.extract(
+        raw,
+        include_comments=False,
+        include_tables=True,
+        favor_precision=False,
+        no_fallback=False,
+    )
+
+    if not text or not text.strip():
+        # Fallback: crude body text via BeautifulSoup.
+        from bs4 import BeautifulSoup
+
+        try:
+            soup = BeautifulSoup(raw, "lxml")
+        except Exception:
+            soup = BeautifulSoup(raw, "html.parser")
+        for tag in soup(["script", "style", "noscript", "template"]):
+            tag.decompose()
+        text = soup.get_text(separator="\n", strip=True)
+
+    return ParsedDocument(pages=[ParsedPage(page_number=1, text=text or "")])
+
+
 PARSERS = {
     "pdf": parse_pdf,
     "txt": parse_txt,
     "docx": parse_docx,
+    "html": parse_html,
 }
 
 

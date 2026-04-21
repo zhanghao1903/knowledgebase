@@ -22,3 +22,18 @@ class UnsupportedFileTypeError(BadRequestError):
         super().__init__(
             detail=f"Unsupported file type: '{file_type}'. Supported: pdf, txt, docx",
         )
+
+
+class InvalidURLError(BadRequestError):
+    def __init__(self, detail: str):
+        super().__init__(detail=f"Invalid URL: {detail}")
+
+
+class URLFetchError(BadRequestError):
+    def __init__(self, detail: str):
+        super().__init__(detail=f"Failed to fetch URL: {detail}")
+
+
+class UnsupportedSourceOperationError(BadRequestError):
+    def __init__(self, detail: str):
+        super().__init__(detail=detail)

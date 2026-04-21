@@ -26,7 +26,8 @@
             <table>
               <thead>
                 <tr>
-                  <th>文件名</th>
+                  <th>来源</th>
+                  <th>名称 / 链接</th>
                   <th>类型</th>
                   <th>状态</th>
                   <th>版本</th>
@@ -35,12 +36,31 @@
               </thead>
               <tbody>
                 <tr v-for="doc in docs" :key="doc.id">
-                  <td>{{ doc.filename }}</td>
+                  <td>
+                    <span v-if="doc.source_type === 'url'" class="badge badge-url" title="网页来源">🔗 URL</span>
+                    <span v-else class="badge badge-neutral" title="上传文件">📄 文件</span>
+                  </td>
+                  <td>
+                    <div>{{ doc.filename }}</div>
+                    <a
+                      v-if="doc.source_type === 'url' && doc.source_url"
+                      :href="doc.source_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-sm text-secondary source-link"
+                    >{{ doc.source_url }}</a>
+                  </td>
                   <td><span class="badge badge-neutral">{{ doc.file_type }}</span></td>
                   <td><StatusBadge :status="doc.status" /></td>
                   <td>v{{ doc.current_version }}</td>
                   <td class="flex gap-8">
-                    <label class="btn btn-outline btn-sm" style="cursor:pointer">
+                    <button
+                      v-if="doc.source_type === 'url'"
+                      class="btn btn-outline btn-sm"
+                      :disabled="busyDocId === doc.id"
+                      @click="handleRecrawl(doc)"
+                    >重抓</button>
+                    <label v-else class="btn btn-outline btn-sm" style="cursor:pointer">
                       重传
                       <input type="file" style="display:none" accept=".pdf,.txt,.docx" @change="handleReupload(doc, $event)" />
                     </label>
@@ -64,7 +84,7 @@
 <script setup>
 import { ref, onMounted, inject } from 'vue'
 import { getKB } from '../api/knowledgeBase.js'
-import { listDocs, deleteDoc, reuploadDoc } from '../api/document.js'
+import { listDocs, deleteDoc, reuploadDoc, recrawlDoc } from '../api/document.js'
 import DocUpload from '../components/DocUpload.vue'
 import ChatPanel from '../components/ChatPanel.vue'
 import StatusBadge from '../components/StatusBadge.vue'
@@ -74,6 +94,7 @@ const showToast = inject('showToast')
 
 const kb = ref(null)
 const docs = ref([])
+const busyDocId = ref(null)
 
 async function loadKB() {
   try {
@@ -117,8 +138,37 @@ async function handleReupload(doc, event) {
   event.target.value = ''
 }
 
+async function handleRecrawl(doc) {
+  busyDocId.value = doc.id
+  try {
+    const res = await recrawlDoc(doc.id)
+    showToast(res.changed ? '内容已更新，新版本处理中' : '内容未变化')
+    await loadDocs()
+  } catch (e) {
+    showToast('重抓失败: ' + e.message)
+  } finally {
+    busyDocId.value = null
+  }
+}
+
 onMounted(() => {
   loadKB()
   loadDocs()
 })
 </script>
+
+<style scoped>
+.badge-url {
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+}
+.source-link {
+  display: inline-block;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
+</style>

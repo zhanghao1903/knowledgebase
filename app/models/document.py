@@ -13,6 +13,12 @@ class FileType(str, enum.Enum):
     PDF = "pdf"
     TXT = "txt"
     DOCX = "docx"
+    HTML = "html"
+
+
+class SourceType(str, enum.Enum):
+    FILE = "file"
+    URL = "url"
 
 
 class DocumentStatus(str, enum.Enum):
@@ -40,6 +46,13 @@ class Document(Base):
     )
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
     file_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    source_type: Mapped[SourceType] = mapped_column(
+        Enum(SourceType, values_callable=lambda t: [e.value for e in t]),
+        nullable=False,
+        default=SourceType.FILE,
+    )
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     status: Mapped[DocumentStatus] = mapped_column(
         Enum(DocumentStatus, values_callable=lambda t: [e.value for e in t]),
         default=DocumentStatus.PENDING,
@@ -72,6 +85,8 @@ class DocumentVersion(Base):
     version_number: Mapped[int] = mapped_column(Integer, nullable=False)
     file_path: Mapped[str] = mapped_column(String(1024), nullable=False)
     file_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    source_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    content_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
